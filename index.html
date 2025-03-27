@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Puzzle Game</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: rgb(247, 252, 176);
+
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(12, 60px);
+            gap: 5px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .card {
+            width: 45px;
+            height: 45px;
+            background-color: gray;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .hidden {
+            background-color: white;
+            pointer-events: none;
+        }
+        #timer {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+        .fireworks {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 50px;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Puzzle Game</h1>
+    <div id="timer">Time: 120s</div>
+    <div class="game-board" id="gameBoard"></div>
+    <button onclick="restartGame()">Restart</button>
+    <div class="fireworks" id="fireworks">🎆 Congrats! 🎆</div>
+    <div class="fireworks" id="gameOver" style="display: none;">⏳ Game Over! ⏳</div>
+    
+    <script>
+        let emojis = ["😀", "😂", "😎", "😍", "🤩", "😜", "😱", "🤯", "🤡", "👻", "👽", "🤖", "💀", "👺", "👾", "🦄", "🐉", "🐵", "🐷", "🐸", "🦊", "🐯", "🐼", "🦁", "🐧", "🐍", "🐢", "🐙", "🐠", "🦀", "🐊", "🦆" ];
+        emojis = [...emojis.slice(0, 72), ...emojis.slice(0, 72)];
+        emojis.sort(() => Math.random() - 0.5);
+        
+        let firstCard = null;
+        let secondCard = null;
+        let matches = 0;
+        let time = 300;
+        let timer;
+        let lockBoard = false;
+        
+        function startTimer() {
+            time = 300;
+            document.getElementById("timer").innerText = `Time: ${time}s`;
+            timer = setInterval(() => {
+                time--;
+                document.getElementById("timer").innerText = `Time: ${time}s`;
+                if (time === 0) {
+                    clearInterval(timer);
+                    document.getElementById("gameOver").style.display = "flex";
+                }
+            }, 1000);
+        }
+        
+        function stopTimer() {
+            clearInterval(timer);
+        }
+        
+        function checkMatch() {
+            lockBoard = true;
+            if (firstCard && secondCard) {
+                if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+                    firstCard.classList.add("hidden");
+                    secondCard.classList.add("hidden");
+                    matches++;
+                    if (matches === emojis.length / 2) {
+                        stopTimer();
+                        document.getElementById("fireworks").style.display = "flex";
+                    }
+                    resetBoard();
+                } else {
+                    setTimeout(() => {
+                        firstCard.innerText = "";
+                        secondCard.innerText = "";
+                        firstCard.style.backgroundColor = "gray";
+                        secondCard.style.backgroundColor = "gray";
+                        resetBoard();
+                    }, 500);
+                }
+            }
+        }
+        
+        function resetBoard() {
+            firstCard = null;
+            secondCard = null;
+            lockBoard = false;
+        }
+        
+        function createBoard() {
+            const board = document.getElementById("gameBoard");
+            board.innerHTML = "";
+            matches = 0;
+            emojis.sort(() => Math.random() - 0.5);
+            emojis.forEach(emoji => {
+                const card = document.createElement("div");
+                card.classList.add("card");
+                card.dataset.emoji = emoji;
+                card.onclick = function() {
+                    if (lockBoard || this === firstCard) return;
+                    this.innerText = emoji;
+                    this.style.backgroundColor = "white";
+                    if (!firstCard) {
+                        firstCard = this;
+                    } else {
+                        secondCard = this;
+                        checkMatch();
+                    }
+                };
+                board.appendChild(card);
+            });
+        }
+        
+        function restartGame() {
+            document.getElementById("fireworks").style.display = "none";
+            document.getElementById("gameOver").style.display = "none";
+            stopTimer();
+            startTimer();
+            createBoard();
+        }
+        
+        startTimer();
+        createBoard();
+    </script>
+</body>
+</html>
